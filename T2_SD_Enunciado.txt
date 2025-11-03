@@ -1,1 +1,68 @@
-Enunciado T2
+Trabalho 2
+A nota T2 tem 3 componentes:
+1) apresentação sobre plataformas distribuídas - já realizado
+2) estudo de caso com Paxos
+3) estudo de caso com Raft
+Estudo de caso usando código de Paxos MMC
+Usando código de Paxos MMC
+python v2
+é possivel passar para 3, ou executar com o v2
+0) Pede-se: entender, executar, avaliar.
+1) como o "backoff" tenta evitar livelock de líderes?
+-coloque prints no sistema e execute sem backoff
+observe se existe o comportamento de livelock?
+mande comandos ao sistema durante esta avaliação.
+-idem para backoff
+2) se uma réplica falha e reinicia,
+-há como obter as decisões anteriores para que ela se sincronize?
+-construa e demonstre este cenário de execução
+Estudo de caso usando Raft
+Escolha uma implementação de Raft.
+0) Baixe, crie um sistema com no mínimo 3 réplicas, execute.
+- use o laboratório.
+deve ser distribuído.
+
+1) Medição de desempenho - visão geral
+O objetivo é medir a capacidade de vazão (operações por segundo) e a latência de resposta para níveis incrementais de carga.
+Você deve ter um módulo de geração de carga controlada (cliente).
+A partir disso, você faz varias execuções do sistema replicado, variando a carga, e anotando vazão e latência de cada execução.
+A cada execução, o sistema deve ser terminado e reiniciado.
+Cada execução roda por um tempo determinado, por exemplo 3 minutos.
+Ao final destas execuções, voce gera um grafico com eixo x=vazão e eixo y=latência e com varios pontos,
+cada ponto equivale a uma execução realizada.
+2) Para fazer isto, voce precisa de um modulo cliente como rascunhado abaixo:
+[cliente]
+cada processo cliente faz
+aguarda sistema estar no ar, inicia, etc.
+uma vez que pode prosseguir...
+toma um timestamp_inicio
+loop [parada por tempo]
+cria um pedido
+toma um timestamp1
+manda para o "cluster" Raft
+aguarda a resposta
+calcula amostra de latência = tempoAgora-timestamp1
+grava amostra de latência em um array (por exemplo)
+nroPedidos++
+fim loop [por um tempo programado]
+calcula tempoTotal = tempoAgora - timestamp_inicio
+geração de métricas:
+vazão = nroPedidos / tempo Total
+latência Média = somatorio de todas latencias do array / nroPedidos
+função De Distribuicao Cumulativa de latência
+[Desempenho geral do sistema para esta execução.]
+vazão = somatório das vazões observadas em cada cliente
+latencia = média da latência média entre os clientes
+
+[Experimentos:]
+para cada nivel de carga
+subir replicas
+esperar estarem ativas subir nro de clientes [cliente] por tempo aguardar termino conforme tempo calculado colher dados de cada cliente obter [ desempenho geral do sistema para esta execução]
+plotar ponto no grafico onde vazao está no X e latencia está no Y
+Entrega dos estudos de caso com Paxos e Raft
+Aberto: sexta-feira, 17 out. 2025, 00:00 Vencimento: segunda-feira, 17 nov. 2025, 17:30
+Entregar como outros trabalhos:
+crie uma pasta que seja a concatenacao dos nomes dos compontes do grupo dentro desta, crie uma pasta Paxos
+e outra para Raft.
+Em Paxos, coloque seus códigos utilizados para responder às questões, e adicione um arquivo RESPOSTAS.PDF contendo:
+seus nomes e as repostas às questões sobe o Paxos.

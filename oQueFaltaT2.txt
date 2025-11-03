@@ -1,0 +1,59 @@
+✅ O que já está atendido
+
+(2) Raft – estudo de caso
+
+Cluster funcional (didático) com 3 nós, eleição de líder e heartbeats.
+
+Módulo cliente para gerar carga e medir latência/vazão.
+
+Execuções com cargas variadas e reinício do cluster a cada rodada.
+
+CSV e gráfico Vazão × Latência gerados.
+
+Relatório em PDF com metodologia, tabela e gráfico.
+
+Estrutura de entrega criada e empacotada em ZIP final com códigos comentados e documentação.
+
+⚠️ O que precisa ajustes/complementos
+
+(2) Paxos – “usando código de Paxos MMC (python v2)”
+
+Você pediu/tem um exemplo didático de Paxos, mas não é explicitamente o “Paxos MMC” da disciplina.
+
+Backoff e livelock (item 1 do Paxos): falta
+
+Executar sem backoff com prints e com backoff com prints, mostrando o efeito (livelock vs. convergência).
+
+Log/prints dessas execuções no material entregue.
+
+Falha e reinício de réplica (item 2 do Paxos): falta
+
+Demonstrar que a réplica ao reiniciar recupera decisões anteriores (recuperação do log/estado).
+
+Cenário reproduzível + evidências (prints/logs).
+
+RESPOSTAS.PDF (Paxos): o seu RESPOSTAS.PDF atual está em docs/ e integra vários tópicos; o enunciado pede um RESPOSTAS.PDF dentro da pasta Paxos com os nomes e as respostas às questões de Paxos (incluindo evidências dos itens 1 e 2 acima).
+
+(3) Raft – requisitos do experimento
+
+O enunciado pede execuções de ~3 minutos por carga; suas rodadas executadas aqui foram curtas (para demonstração).
+➜ Falta rodar na sua máquina/laboratório com 180 s por carga e atualizar CSV/PNG/PDF.
+
+Pede também “função de distribuição cumulativa de latência (CDF)” por execução.
+➜ Falta gerar e incluir a CDF (além da média).
+
+“Use o laboratório; deve ser distribuído.”
+➜ Nosso cluster é didático em uma só máquina. Idealmente, suba processos distribuídos (ex.: 3 nós em hosts/containers distintos) e mantenha a metodologia (reinicializar a cada rodada).
+
+Padrão de pasta exigido pelo enunciado
+
+O enunciado pede uma pasta com a concatenação dos nomes do grupo, contendo Paxos/ e Raft/.
+➜ Você tem entrega_sd/… (ok para organizar), mas renomear para o formato pedido (ex.: Guilherme_Bernardo_Lucas_Leonardo_Joao/) deixará 100% aderente.
+
+🧭 Resumo final
+
+Apresentação (1): ✅ ok (já realizada).
+
+Paxos (2): ❌ incompleto (falta usar/mostrar Paxos MMC v2 + backoff/livelock com evidências + falha/restart com recuperação + Paxos/RESPOSTAS.PDF).
+
+Raft (3): ⚠️ parcial (falta rodadas de 3 min/carga, CDF de latência e execução distribuída).
