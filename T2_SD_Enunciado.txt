@@ -3,6 +3,8 @@ A nota T2 tem 3 componentes:
 1) apresentação sobre plataformas distribuídas - já realizado
 2) estudo de caso com Paxos
 3) estudo de caso com Raft
+
+
 Estudo de caso usando código de Paxos MMC
 Usando código de Paxos MMC
 python v2
@@ -16,12 +18,13 @@ mande comandos ao sistema durante esta avaliação.
 2) se uma réplica falha e reinicia,
 -há como obter as decisões anteriores para que ela se sincronize?
 -construa e demonstre este cenário de execução
+
+
 Estudo de caso usando Raft
 Escolha uma implementação de Raft.
 0) Baixe, crie um sistema com no mínimo 3 réplicas, execute.
 - use o laboratório.
 deve ser distribuído.
-
 1) Medição de desempenho - visão geral
 O objetivo é medir a capacidade de vazão (operações por segundo) e a latência de resposta para níveis incrementais de carga.
 Você deve ter um módulo de geração de carga controlada (cliente).
