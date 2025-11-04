@@ -1,20 +1,24 @@
-# Revisão - O que é pedido nos itens 0), 1) e 2) do Raft
+# Revisão Completa - O que é pedido nos itens 0), 1) e 2) do Raft
 
 ## Item 0: Baixe, crie um sistema com no mínimo 3 réplicas, execute
 
 ### O que é pedido:
 
-1. **Baixe** - Escolha uma implementação de Raft
-   - ⚠️ **Nota importante**: O código foi implementado do zero, não foi baixado de nenhuma fonte específica
+1. **Escolha uma implementação de Raft**
+   - **Base escolhida**: [etcd-io/raft](https://github.com/etcd-io/raft) - Biblioteca Raft em Go
+   - **Nota**: O repositório etcd-io/raft é em Go, mas foi usado como referência para implementar em Python
 
-2. **Crie um sistema com no mínimo 3 réplicas**
+2. **Baixe** - Escolha uma implementação de Raft
+   - ⚠️ **Nota importante**: O código foi implementado em Python baseado no protocolo Raft e na referência do etcd-io/raft, mas não foi copiado diretamente (pois o etcd-io/raft é em Go)
+
+3. **Crie um sistema com no mínimo 3 réplicas**
    - ✅ Implementado: `raft_example.py` com 3 servidores (linha 81)
    - ✅ Implementado: `raft_distribuido.py` com 3 nós distribuídos
 
-3. **Execute**
+4. **Execute**
    - ✅ Implementado: Código funcional e executável
 
-4. **Use o laboratório. Deve ser distribuído**
+5. **Use o laboratório. Deve ser distribuído**
    - ✅ Implementado: `raft_distribuido.py` permite execução distribuída
    - ✅ Versão distribuída usa HTTP para comunicação entre nós
    - ✅ Pode executar em múltiplas máquinas/hosts diferentes
@@ -23,6 +27,7 @@
 
 | Requisito | Status | Localização |
 |-----------|--------|-------------|
+| Escolher implementação | ✅ | Baseado em etcd-io/raft |
 | 3 réplicas | ✅ | `raft_example.py` linha 81 |
 | Sistema funcional | ✅ | Código executável |
 | Distribuído | ✅ | `raft_distribuido.py` |
@@ -176,7 +181,7 @@ Razões:
 ### Referências Acadêmicas:
 
 - **Protocolo Raft original**: "In Search of an Understandable Consensus Algorithm" - Diego Ongaro e John Ousterhout (2014)
-- **Implementação de referência**: [etcd-io/raft](https://github.com/etcd-io/raft) - Biblioteca Raft em Go
+- **Implementação de referência**: [etcd-io/raft](https://github.com/etcd-raft) - Biblioteca Raft em Go
 - **Estados**: Follower, Candidate, Leader
 - **Processo**: Eleição de líder, heartbeats, votação
 
@@ -193,6 +198,7 @@ Razões:
 ## Conclusão
 
 ### Item 0: ✅ Totalmente Atendido
+- Baseado em etcd-io/raft (como referência)
 - Sistema com 3 réplicas implementado
 - Versão distribuída implementada
 - Código funcional e executável
@@ -212,9 +218,7 @@ Razões:
 - Experimentos completos implementados
 
 ### Origem do Código:
-- **Base conceitual**: [etcd-io/raft](https://github.com/etcd-io/raft) (arquitetura e protocolo)
-- **Implementação**: Criada do zero em Python
-- **Adaptação**: De Go para Python, mantendo conceitos do protocolo Raft
-- **Referência**: Usado como base para entender a arquitetura e implementação do algoritmo Raft
-
+- **Base conceitual**: etcd-io/raft (https://github.com/etcd-io/raft)
+- **Implementação**: Criada do zero em Python baseada no protocolo Raft
+- **Adaptação**: De Go para Python, mantendo conceitos do protocolo
 

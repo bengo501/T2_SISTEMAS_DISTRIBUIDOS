@@ -64,26 +64,32 @@
 
 ## Origem do Código Raft
 
-### Informação Importante:
+### Referência Base:
 
-**O código foi implementado do zero, baseado no protocolo Raft descrito na literatura acadêmica, não foi baixado de nenhuma fonte específica.**
+**Base de Implementação**: [etcd-io/raft](https://github.com/etcd-io/raft)
 
-O enunciado menciona "Escolha uma implementação de Raft" e "Baixe", mas não especifica uma fonte ou repositório específico. Portanto:
+O repositório [etcd-io/raft](https://github.com/etcd-io/raft) é uma biblioteca Raft em Go para manter uma máquina de estado replicada. É uma implementação de produção amplamente usada.
 
-1. **raft_example.py** - Implementação didática criada para este trabalho
-2. **raft_distribuido.py** - Versão distribuída criada para este trabalho
-3. **run_benchmark.py** - Script de benchmark criado para este trabalho
-4. **client_simulator.py** - Cliente criado para este trabalho
+### Observação Importante:
+
+**O código foi implementado em Python baseado no protocolo Raft e inspirado na arquitetura do etcd-io/raft, mas não foi copiado diretamente.**
+
+Razões:
+1. O etcd-io/raft é escrito em **Go**, não em Python
+2. A implementação atual é em **Python** para este trabalho
+3. Foi seguida a **especificação do protocolo Raft** e a **arquitetura conceitual** do etcd-io/raft
+4. Os conceitos principais foram adaptados para Python
 
 ### Referências Acadêmicas:
 
 - **Protocolo Raft original**: "In Search of an Understandable Consensus Algorithm" - Diego Ongaro e John Ousterhout (2014)
+- **Implementação de referência**: [etcd-io/raft](https://github.com/etcd-io/raft) - Biblioteca Raft em Go
 - **Estados**: Follower, Candidate, Leader
 - **Processo**: Eleição de líder, heartbeats, votação
 
 ### Observação:
 
-O código foi implementado seguindo a especificação do protocolo Raft, mas **não foi baixado de nenhum repositório específico ou código fonte encontrado na internet**. A implementação foi feita para atender aos requisitos específicos do trabalho.
+O código foi implementado seguindo a especificação do protocolo Raft e a arquitetura do etcd-io/raft, mas **foi adaptado do zero em Python** (o etcd-io/raft é em Go). A implementação foi feita para atender aos requisitos específicos do trabalho.
 
 ---
 
@@ -116,8 +122,9 @@ Todos os arquivos foram copiados para a pasta de entrega (`ENTREGA_GRUPO/Raft/`)
 - Item 0: Totalmente atendido
 - Item 1: Totalmente atendido
 - Item 2: Totalmente atendido
-- Origem do código: Implementado do zero baseado no protocolo Raft
+- Origem do código: Baseado em [etcd-io/raft](https://github.com/etcd-io/raft), implementado do zero em Python
 - Limpeza de comentários: Completa
 
 Tudo pronto para entrega!
+
 
