@@ -32,7 +32,7 @@ def demonstrar_falha_e_recuperacao():
     for i in range(2):
         pid = "replica: %d" % i
         log_file = f"{log_dir}/replica_{i}.log"
-        replica = Replica(env, pid, initialconfig, log_file=log_file)
+        Replica(env, pid, initialconfig, log_file=log_file)
         replicas.append((pid, log_file))
         initialconfig.replicas.append(pid)
     
@@ -73,7 +73,7 @@ def demonstrar_falha_e_recuperacao():
     
     print("\n[fase 4] recuperando réplica (criando nova instância com log)...")
     replica_id, log_file = replicas[0]
-    nova_replica = Replica(env, replica_id, initialconfig, log_file=log_file)
+    Replica(env, replica_id, initialconfig, log_file=log_file)
     initialconfig.replicas[0] = replica_id
     
     print(f"[fase 4] réplica {replica_id} recuperada com decisões do log")

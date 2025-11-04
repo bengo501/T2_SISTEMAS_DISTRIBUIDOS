@@ -25,23 +25,24 @@ def executar_test_backoff(use_backoff=True, duracao_segundos=15):
     
     initialconfig = Config([], [], [])
     
+    from replica import Replica
+    from acceptor import Acceptor
+    from leader import Leader
+    
     for i in range(2):
         pid = "replica: %d" % i
         log_file = f"{log_dir}/replica_{i}.log"
-        from replica import Replica
         Replica(env, pid, initialconfig, log_file=log_file)
         initialconfig.replicas.append(pid)
     
     for i in range(3):
         pid = "acceptor: %d.%d" % (0, i)
         log_file = f"{log_dir}/acceptor_0_{i}.log"
-        from acceptor import Acceptor
         Acceptor(env, pid, log_file=log_file)
         initialconfig.acceptors.append(pid)
     
     for i in range(2):
         pid = "leader: %d.%d" % (0, i)
-        from leader import Leader
         Leader(env, pid, initialconfig, use_backoff=use_backoff)
         initialconfig.leaders.append(pid)
     
