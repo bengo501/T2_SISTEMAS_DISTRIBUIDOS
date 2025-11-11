@@ -14,18 +14,19 @@ import (
 )
 
 type RaftNode struct {
-	id          uint64
-	port        int
-	node        raft.Node
-	storage     *memoryStorage
-	transport   *Transport
-	proposeC    chan []byte
-	confChangeC chan raftpb.ConfChange
-	commitC     chan *commit
-	done        chan struct{}
-	mu          sync.Mutex
-	lastIndex   uint64
-	commits     map[uint64]bool
+	id            uint64
+	port          int
+	node          raft.Node
+	storage       *memoryStorage
+	transport     *Transport
+	proposeC      chan []byte
+	confChangeC   chan raftpb.ConfChange
+	commitC       chan *commit
+	done          chan struct{}
+	mu            sync.Mutex
+	lastIndex     uint64
+	commits       map[uint64]bool
+	committedData map[string]bool
 }
 
 type commit struct {
@@ -51,16 +52,17 @@ func NewRaftNode(id uint64, peers []raft.Peer, port int, peerPorts []int) (*Raft
 	transport := NewTransport(id, port, peerPorts)
 
 	rn := &RaftNode{
-		id:          id,
-		port:        port,
-		node:        node,
-		storage:     storage,
-		transport:   transport,
-		proposeC:    make(chan []byte, 1000),
-		confChangeC: make(chan raftpb.ConfChange, 100),
-		commitC:     make(chan *commit, 1000),
-		done:        make(chan struct{}),
-		commits:     make(map[uint64]bool),
+		id:            id,
+		port:          port,
+		node:          node,
+		storage:       storage,
+		transport:     transport,
+		proposeC:      make(chan []byte, 1000),
+		confChangeC:   make(chan raftpb.ConfChange, 100),
+		commitC:       make(chan *commit, 1000),
+		done:          make(chan struct{}),
+		commits:       make(map[uint64]bool),
+		committedData: make(map[string]bool),
 	}
 
 	transport.SetNode(node)
@@ -69,6 +71,14 @@ func NewRaftNode(id uint64, peers []raft.Peer, port int, peerPorts []int) (*Raft
 	go rn.serveRaft()
 	go rn.serveHTTP()
 	go rn.processCommits()
+
+	// força início de eleição no nó 1 para evitar cluster sem líder
+	if id == 1 {
+		go func() {
+			time.Sleep(500 * time.Millisecond)
+			_ = node.Campaign(context.Background())
+		}()
+	}
 
 	return rn, nil
 }
@@ -129,6 +139,7 @@ func (rn *RaftNode) processCommits() {
 		rn.mu.Lock()
 		rn.commits[commit.index] = true
 		rn.lastIndex = commit.index
+		rn.committedData[string(commit.data)] = true
 		rn.mu.Unlock()
 		commit.committed <- true
 	}
@@ -138,6 +149,21 @@ func (rn *RaftNode) Propose(data []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return rn.node.Propose(ctx, data)
+}
+
+func (rn *RaftNode) WaitForDataCommit(data []byte, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	key := string(data)
+	for time.Now().Before(deadline) {
+		rn.mu.Lock()
+		ok := rn.committedData[key]
+		rn.mu.Unlock()
+		if ok {
+			return true
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return false
 }
 
 func (rn *RaftNode) WaitForCommit(index uint64, timeout time.Duration) bool {
@@ -155,15 +181,33 @@ func (rn *RaftNode) WaitForCommit(index uint64, timeout time.Duration) bool {
 }
 
 func (rn *RaftNode) serveHTTP() {
-	http.HandleFunc("/propose", rn.handlePropose)
-	http.HandleFunc("/status", rn.handleStatus)
-	http.HandleFunc("/health", rn.handleHealth)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/propose", rn.handlePropose)
+	mux.HandleFunc("/status", rn.handleStatus)
+	mux.HandleFunc("/health", rn.handleHealth)
+	mux.HandleFunc("/campaign", rn.handleCampaign)
 
 	addr := fmt.Sprintf(":%d", rn.port)
 	log.Printf("raft %d: servindo http em %s", rn.id, addr)
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("raft %d: erro ao iniciar http server: %v", rn.id, err)
 	}
+}
+
+func (rn *RaftNode) handleCampaign(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "método não permitido", http.StatusMethodNotAllowed)
+		return
+	}
+	go func() {
+		_ = rn.node.Campaign(context.Background())
+	}()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":  true,
+		"id":  rn.id,
+		"msg": "campaign solicitado",
+	})
 }
 
 func (rn *RaftNode) handlePropose(w http.ResponseWriter, r *http.Request) {
@@ -185,12 +229,8 @@ func (rn *RaftNode) handlePropose(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rn.mu.Lock()
-	index := rn.lastIndex + 1
-	rn.mu.Unlock()
-
 	timeout := 5 * time.Second
-	if !rn.WaitForCommit(index, timeout) {
+	if !rn.WaitForDataCommit([]byte(req.Data), timeout) {
 		http.Error(w, "timeout aguardando commit", http.StatusRequestTimeout)
 		return
 	}
@@ -198,7 +238,7 @@ func (rn *RaftNode) handlePropose(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success": true,
-		"index":   index,
+		"data":    req.Data,
 	})
 }
 

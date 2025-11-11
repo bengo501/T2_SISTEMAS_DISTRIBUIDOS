@@ -19,6 +19,8 @@ type Benchmark struct {
 	outputCSV    string
 	outputPNG    string
 	outputCDFDir string
+
+	procs []*exec.Cmd
 }
 
 func NewBenchmark(raftURLs []string, duracao time.Duration, cargas []int) *Benchmark {
@@ -29,6 +31,7 @@ func NewBenchmark(raftURLs []string, duracao time.Duration, cargas []int) *Bench
 		outputCSV:    "resultados_desempenho.csv",
 		outputPNG:    "grafico_vazao_latencia.png",
 		outputCDFDir: "cdf_latencia",
+		procs:        make([]*exec.Cmd, 0, 3),
 	}
 }
 
@@ -114,16 +117,31 @@ func (b *Benchmark) runRoundWithRestart(nClients int) (throughput float64, avgLa
 }
 
 func (b *Benchmark) startCluster() {
+	// tenta parar cluster anterior
+	b.stopCluster()
+	time.Sleep(300 * time.Millisecond)
+
+	b.procs = b.procs[:0]
 	for i := 0; i < 3; i++ {
 		port := 8000 + i
 		cmd := exec.Command("go", "run", ".", "--id", strconv.Itoa(i+1), "--port", strconv.Itoa(port))
 		cmd.Dir = "."
-		cmd.Start()
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Start(); err == nil {
+			b.procs = append(b.procs, cmd)
+		}
 	}
 }
 
 func (b *Benchmark) stopCluster() {
-	exec.Command("pkill", "-f", "go run").Run()
+	for _, p := range b.procs {
+		if p != nil && p.Process != nil {
+			_ = p.Process.Kill()
+			_, _ = p.Process.Wait()
+		}
+	}
+	b.procs = b.procs[:0]
 }
 
 func (b *Benchmark) saveCSV(resultados []Resultado) error {

@@ -37,11 +37,12 @@ func (t *Transport) SetNode(node raft.Node) {
 }
 
 func (t *Transport) Start() {
-	http.HandleFunc("/raft/message", t.handleMessage)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/raft/message", t.handleMessage)
 	go func() {
 		addr := fmt.Sprintf(":%d", t.port+1000)
 		log.Printf("transport %d: servindo em %s", t.id, addr)
-		if err := http.ListenAndServe(addr, nil); err != nil {
+		if err := http.ListenAndServe(addr, mux); err != nil {
 			log.Fatalf("transport %d: erro ao iniciar: %v", t.id, err)
 		}
 	}()
@@ -73,6 +74,7 @@ func (t *Transport) Send(messages []raftpb.Message) {
 		url := fmt.Sprintf("http://localhost:%d/raft/message", peerPort+1000)
 		resp, err := http.Post(url, "application/x-protobuf", bytes.NewReader(data))
 		if err != nil {
+			log.Printf("transport %d: falha ao enviar msg para %s (To=%d, Type=%s): %v", t.id, url, msg.To, msg.Type.String(), err)
 			continue
 		}
 		resp.Body.Close()
