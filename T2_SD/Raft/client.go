@@ -32,8 +32,13 @@ func NewClient(id int, raftURLs []string, duration time.Duration) *Client {
 }
 
 func (c *Client) Run() {
+	// fase 1: aguardar cluster estar pronto (conforme enunciado: "aguarda sistema estar no ar")
+	c.waitForClusterReady()
+
+	// fase 2: iniciar medição (conforme enunciado: "toma um timestamp_inicio")
 	c.startTime = time.Now()
 
+	// fase 3: loop por tempo programado (conforme enunciado: "loop [parada por tempo]")
 	for time.Since(c.startTime) < c.duration {
 		leaderURL := c.pickLeader()
 		if leaderURL == "" {
@@ -41,17 +46,56 @@ func (c *Client) Run() {
 			continue
 		}
 
+		// conforme enunciado: "toma um timestamp1" e "manda para o cluster Raft"
 		t1 := time.Now()
 		if c.sendRequest(leaderURL) {
+			// conforme enunciado: "calcula amostra de latência = tempoAgora - timestamp1"
 			lat := time.Since(t1).Seconds()
 			c.mu.Lock()
+			// conforme enunciado: "grava amostra de latência em um array"
 			c.latencies = append(c.latencies, lat)
+			// conforme enunciado: "nroPedidos++"
 			c.requests++
 			c.mu.Unlock()
 		}
 
 		time.Sleep(10 * time.Millisecond)
 	}
+}
+
+// waitForClusterReady aguarda o cluster estar pronto antes de iniciar medição
+// conforme requisito do enunciado: "aguarda sistema estar no ar, inicia, etc."
+func (c *Client) waitForClusterReady() {
+	maxWait := 30 * time.Second
+	deadline := time.Now().Add(maxWait)
+	
+	// aguarda até encontrar um líder operacional
+	for time.Now().Before(deadline) {
+		leaderURL := c.pickLeader()
+		if leaderURL != "" {
+			// verifica se líder está realmente operacional fazendo uma requisição de teste
+			if c.testLeader(leaderURL) {
+				// cluster está pronto, aguarda mais um pouco para estabilizar
+				time.Sleep(500 * time.Millisecond)
+				return
+			}
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	
+	// se não encontrou cluster pronto, continua mesmo assim (com warning implícito)
+	// isso permite que o benchmark continue mesmo em caso de problemas
+}
+
+// testLeader verifica se o líder está realmente operacional
+func (c *Client) testLeader(url string) bool {
+	// tenta uma requisição simples para verificar se o líder está respondendo
+	resp, err := http.Get(url + "/health")
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }
 
 func (c *Client) pickLeader() string {

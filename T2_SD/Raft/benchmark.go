@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"sort"
@@ -79,9 +80,16 @@ func (b *Benchmark) Run() error {
 }
 
 func (b *Benchmark) runRoundWithRestart(nClients int) (throughput float64, avgLatency float64, latencies []float64) {
+	// conforme enunciado: "subir replicas"
 	b.startCluster()
-	time.Sleep(2 * time.Second)
 
+	// conforme enunciado: "esperar estarem ativas"
+	// aguarda cluster estar pronto antes de iniciar clientes
+	if !b.waitForClusterReady(30 * time.Second) {
+		log.Printf("aviso: cluster pode nao estar totalmente pronto, continuando mesmo assim")
+	}
+
+	// conforme enunciado: "subir nro de clientes [cliente]"
 	clients := make([]*Client, nClients)
 	var wg sync.WaitGroup
 
@@ -143,6 +151,71 @@ func (b *Benchmark) stopCluster() {
 		}
 	}
 	b.procs = b.procs[:0]
+}
+
+// waitForClusterReady aguarda o cluster estar pronto antes de iniciar clientes
+// conforme requisito do enunciado: "esperar estarem ativas"
+func (b *Benchmark) waitForClusterReady(timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		// verifica se há um líder eleito
+		leader := b.findLeader()
+		if leader == "" {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		// verifica se pelo menos 2 nós estão respondendo (cluster mínimo funcional)
+		activeNodes := b.countActiveNodes()
+		if activeNodes >= 2 {
+			// aguarda mais um pouco para garantir estabilidade
+			time.Sleep(2 * time.Second)
+			return true
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	return false
+}
+
+// findLeader encontra o líder do cluster
+func (b *Benchmark) findLeader() string {
+	for _, url := range b.raftURLs {
+		resp, err := http.Get(url + "/status")
+		if err != nil {
+			continue
+		}
+		defer resp.Body.Close()
+
+		var status struct {
+			State string `json:"state"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+			continue
+		}
+
+		if status.State == "StateLeader" {
+			return url
+		}
+	}
+	return ""
+}
+
+// countActiveNodes conta quantos nós estão respondendo
+func (b *Benchmark) countActiveNodes() int {
+	count := 0
+	for _, url := range b.raftURLs {
+		resp, err := http.Get(url + "/health")
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				count++
+			}
+		}
+	}
+	return count
 }
 
 func (b *Benchmark) saveCSV(resultados []Resultado) error {
