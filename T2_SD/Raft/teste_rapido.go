@@ -103,5 +103,5 @@ func main() {
 	fmt.Println("teste rapido concluido com sucesso!")
 	fmt.Println(strings.Repeat("=", 80))
 	fmt.Println("\npronto para executar benchmark completo:")
-	fmt.Println("  go run -tags benchmark benchmark_main.go --duracao 180 --cargas 1,2,3,4")
+	fmt.Println("  go run -tags benchmark . --duracao 180 --cargas 1,2,3,4")
 }

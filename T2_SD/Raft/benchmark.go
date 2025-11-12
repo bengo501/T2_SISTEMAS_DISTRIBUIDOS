@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -220,12 +221,26 @@ func (b *Benchmark) generateCDFGraphs(resultados []Resultado) error {
 		}
 
 		sorted, cumulative := b.calcularCDF(r.latencies)
+		sortedJSON, err := json.Marshal(sorted)
+		if err != nil {
+			log.Printf("erro ao serializar latencias ordenadas para %d clientes: %v", r.nroClientes, err)
+			continue
+		}
+		cumulativeJSON, err := json.Marshal(cumulative)
+		if err != nil {
+			log.Printf("erro ao serializar cdf para %d clientes: %v", r.nroClientes, err)
+			continue
+		}
+
+		if err := b.writeLatenciesJSON(r); err != nil {
+			log.Printf("erro ao salvar latencias para %d clientes: %v", r.nroClientes, err)
+		}
 
 		script := fmt.Sprintf(`
 import matplotlib.pyplot as plt
 
-sorted_lat = %v
-cumulative = %v
+sorted_lat = %s
+cumulative = %s
 
 plt.figure(figsize=(10, 6))
 plt.plot(sorted_lat, cumulative, 'b-', linewidth=2)
@@ -237,7 +252,7 @@ plt.xlim(0, max(sorted_lat) * 1.1 if sorted_lat else 1)
 plt.ylim(0, 1)
 plt.savefig('%s/cdf_latencia_%d_clientes.png', dpi=140, bbox_inches='tight')
 plt.close()
-`, sorted, cumulative, r.nroClientes, b.duracao, b.outputCDFDir, r.nroClientes)
+`, sortedJSON, cumulativeJSON, r.nroClientes, b.duracao, b.outputCDFDir, r.nroClientes)
 
 		cmd := exec.Command("python", "-c", script)
 		if err := cmd.Run(); err != nil {
@@ -246,4 +261,27 @@ plt.close()
 	}
 
 	return nil
+}
+
+func (b *Benchmark) writeLatenciesJSON(r Resultado) error {
+	if len(r.latencies) == 0 {
+		return nil
+	}
+
+	payload := map[string]interface{}{
+		"nro_clientes": r.nroClientes,
+		"duracao_seg":  b.duracao.Seconds(),
+		"latencias":    r.latencies,
+	}
+
+	filePath := fmt.Sprintf("%s/latencias_%d_clientes.json", b.outputCDFDir, r.nroClientes)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(payload)
 }

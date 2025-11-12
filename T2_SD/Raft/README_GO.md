@@ -10,7 +10,7 @@ Esta implementação usa o código original do repositório [etcd-io/raft](https
 - `transport.go` - Transport para comunicação entre nós
 - `client.go` - Cliente para gerar carga
 - `benchmark.go` - Script de benchmark para medição de desempenho
-- `run_benchmark.go` - Executável para rodar benchmark
+- `benchmark_main.go` - Executável (via build tag `benchmark`) para rodar benchmark
 - `go.mod` - Dependências do projeto
 
 ## Pré-requisitos
@@ -50,7 +50,7 @@ go run . --id 3 --port 8002
 ### 2. Executar benchmark
 
 ```bash
-go run run_benchmark.go --duracao 180 --cargas 1,2,3,4,6,8,10,12
+go run -tags benchmark . --duracao 180 --cargas 1,2,3,4,6,8,10,12
 ```
 
 Parâmetros:
